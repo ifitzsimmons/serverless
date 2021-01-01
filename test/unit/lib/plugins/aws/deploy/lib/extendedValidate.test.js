@@ -90,27 +90,25 @@ describe('extendedValidate', () => {
       expect(() => awsDeploy.extendedValidate()).to.throw(Error);
     });
 
-    it('should not throw error if service has no functions and no service package', () => {
+    it('should not throw error if service has no functions and no service package', async () => {
       stateFileMock.service.functions = {};
       fileExistsSyncStub.returns(true);
       readFileSyncStub.returns(stateFileMock);
 
-      return awsDeploy.extendedValidate().then(() => {
-        expect(fileExistsSyncStub.calledOnce).to.equal(true);
-        expect(readFileSyncStub.calledOnce).to.equal(true);
-      });
+      await awsDeploy.extendedValidate();
+      expect(fileExistsSyncStub.calledOnce).to.equal(true);
+      expect(readFileSyncStub.calledOnce).to.equal(true);
     });
 
-    it('should not throw error if service has no functions and no function packages', () => {
+    it('should not throw error if service has no functions and no function packages', async () => {
       stateFileMock.service.functions = {};
       awsDeploy.serverless.service.package.individually = true;
       fileExistsSyncStub.returns(true);
       readFileSyncStub.returns(stateFileMock);
 
-      return awsDeploy.extendedValidate().then(() => {
-        expect(fileExistsSyncStub.calledOnce).to.equal(true);
-        expect(readFileSyncStub.calledOnce).to.equal(true);
-      });
+      await awsDeploy.extendedValidate();
+      expect(fileExistsSyncStub.calledOnce).to.equal(true);
+      expect(readFileSyncStub.calledOnce).to.equal(true);
     });
 
     it('should not throw error if individual packaging defined on a function level', () => {
@@ -127,7 +125,7 @@ describe('extendedValidate', () => {
       return awsDeploy.extendedValidate();
     });
 
-    it('should use function package level artifact when provided', () => {
+    it('should use function package level artifact when provided', async () => {
       stateFileMock.service.functions = {
         first: {
           package: {
@@ -139,11 +137,10 @@ describe('extendedValidate', () => {
       fileExistsSyncStub.returns(true);
       readFileSyncStub.returns(stateFileMock);
 
-      return awsDeploy.extendedValidate().then(() => {
-        expect(fileExistsSyncStub.calledTwice).to.equal(true);
-        expect(readFileSyncStub.calledOnce).to.equal(true);
-        expect(fileExistsSyncStub).to.have.been.calledWithExactly('artifact.zip');
-      });
+      await awsDeploy.extendedValidate();
+      expect(fileExistsSyncStub.calledTwice).to.equal(true);
+      expect(readFileSyncStub.calledOnce).to.equal(true);
+      expect(fileExistsSyncStub).to.have.been.calledWithExactly('artifact.zip');
     });
 
     it('should throw error if specified package artifact does not exist', () => {
@@ -156,18 +153,18 @@ describe('extendedValidate', () => {
       delete awsDeploy.serverless.service.package.artifact;
     });
 
-    it('should not throw error if specified package artifact exists', () => {
+    it('should not throw error if specified package artifact exists', async () => {
       // const fileExistsSyncStub = sinon.stub(awsDeploy.serverless.utils, 'fileExistsSync');
       fileExistsSyncStub.onCall(0).returns(true);
       fileExistsSyncStub.onCall(1).returns(true);
       readFileSyncStub.returns(stateFileMock);
       awsDeploy.serverless.service.package.artifact = 'some/file.zip';
-      return awsDeploy.extendedValidate().then(() => {
-        delete awsDeploy.serverless.service.package.artifact;
-      });
+
+      await awsDeploy.extendedValidate();
+      delete awsDeploy.serverless.service.package.artifact;
     });
 
-    it("should warn if function's timeout is greater than 30 and it's attached to APIGW", () => {
+    it("should warn if function's timeout is greater than 30 and it's attached to APIGW", async () => {
       stateFileMock.service.functions = {
         first: {
           timeout: 31,
@@ -185,13 +182,13 @@ describe('extendedValidate', () => {
       fileExistsSyncStub.returns(true);
       readFileSyncStub.returns(stateFileMock);
 
-      return awsDeploy.extendedValidate().then(() => {
-        const msg = [
-          "WARNING: Function first has timeout of 31 seconds, however, it's ",
-          "attached to API Gateway so it's automatically limited to 30 seconds.",
-        ].join('');
-        expect(awsDeploy.serverless.cli.log.firstCall.calledWithExactly(msg)).to.be.equal(true);
-      });
+      await awsDeploy.extendedValidate();
+
+      const msg = [
+        "WARNING: Function first has timeout of 31 seconds, however, it's ",
+        "attached to API Gateway so it's automatically limited to 30 seconds.",
+      ].join('');
+      expect(awsDeploy.serverless.cli.log.firstCall.calledWithExactly(msg)).to.be.equal(true);
     });
   });
 });
